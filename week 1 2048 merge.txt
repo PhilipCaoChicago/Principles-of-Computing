@@ -1,0 +1,55 @@
+http://www.codeskulptor.org/#user43_GeBHJIcKpwchAIw_6.py
+
+"""
+Merge function for 2048 game.
+"""
+
+def merge(line):
+    """
+    Function that merges a single row or column in 2048.
+    """
+    
+    # get out of zero in origal line
+    non_zero_count = 0
+    non_zero_line = []    
+    
+    for num in range(len(line)):
+        if line[num] != 0:
+            non_zero_count += 1
+            non_zero_line.append(line[num])
+                             
+                                                              
+    # compute result line with zeros
+    used = [False] * non_zero_count 
+    results_with_zeros = [0] * non_zero_count
+    
+    
+    for num in range(non_zero_count-1):
+        if used[num] == used[num+1] == False:
+            if non_zero_line[num] == non_zero_line[num+1]:
+                results_with_zeros[num] = non_zero_line[num] + non_zero_line[num+1]
+                used[num] = True
+                used[num+1] = True
+            else: 
+                results_with_zeros[num] = non_zero_line[num]
+                used[num] = True     
+                                      
+    for num in range(len(used)):
+        if used[num] == False:
+            results_with_zeros[num] = non_zero_line[num]
+            used[num] = True    
+          
+        
+    # get a shorter result without zero
+    short_results_line = []
+    for num in range(len(results_with_zeros)):
+        if results_with_zeros[num] != 0:
+            short_results_line.append(results_with_zeros[num])
+                       
+
+    # get the results with original lenth
+    result = [0] * len(line)
+    for num in range(len(short_results_line)):
+        result[num] = short_results_line[num]        
+    return result
+

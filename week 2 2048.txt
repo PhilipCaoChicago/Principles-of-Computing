@@ -1,0 +1,219 @@
+http://www.codeskulptor.org/#user43_Vg1dMNJsNZjSbpV_4.py
+
+"""
+Clone of 2048 game.
+"""
+
+import poc_2048_gui
+import random
+import numeric
+
+# Directions, DO NOT MODIFY
+UP = 1
+DOWN = 2
+LEFT = 3
+RIGHT = 4
+
+# Offsets for computing tile indices in each direction.
+# DO NOT MODIFY this dictionary.
+OFFSETS = {UP: (1, 0),
+           DOWN: (-1, 0),
+           LEFT: (0, 1),
+           RIGHT: (0, -1)}
+
+def merge(line):
+    """
+    Helper function that merges a single row or column in 2048
+    """
+    # get out of zero in origal line
+    non_zero_count = 0
+    non_zero_line = []    
+    for num in range(len(line)):
+        if line[num] != 0:
+            non_zero_count += 1
+            non_zero_line.append(line[num])
+                             
+                                                              
+    # compute result line with zeros
+    used = [False] * non_zero_count 
+    results_with_zeros = [0] * non_zero_count
+    
+    
+    for num in range(non_zero_count-1):
+        if used[num] == used[num+1] == False:
+            if non_zero_line[num] == non_zero_line[num+1]:
+                results_with_zeros[num] = non_zero_line[num] + non_zero_line[num+1]
+                used[num] = True
+                used[num+1] = True
+            else: 
+                results_with_zeros[num] = non_zero_line[num]
+                used[num] = True     
+                                      
+    for num in range(len(used)):
+        if used[num] == False:
+            results_with_zeros[num] = non_zero_line[num]
+            used[num] = True    
+          
+        
+    # get a shorter result without zero
+    short_results_line = []
+    for num in range(len(results_with_zeros)):
+        if results_with_zeros[num] != 0:
+            short_results_line.append(results_with_zeros[num])
+                       
+
+    # get the results with original lenth
+    result = [0] * len(line)
+    for num in range(len(short_results_line)):
+        result[num] = short_results_line[num]        
+    return result    
+
+
+def transpose_grid(grid):
+    """
+    Helper function that tranpose a grid
+    """
+    grid_new = []
+    matrix = numeric.Matrix(grid)            
+    matrix_transpose = matrix.transpose()
+    shape = matrix_transpose.shape()
+    for num in range(shape[0]):
+        grid_num = []
+        for num2 in range(shape[1]):
+            grid_num_num2 = int(matrix_transpose[(num,num2)])
+            grid_num.append(grid_num_num2)
+        grid_new.append(grid_num)                                  
+    return grid_new
+
+
+class TwentyFortyEight:
+    """
+    Class to run the game logic.
+    """
+
+    def __init__(self, grid_height, grid_width):
+        # initalize the grid
+        self._height = grid_height
+        self._width = grid_width
+        self.reset()
+
+    def reset(self):
+        """
+        Reset the game so the grid is empty except for two
+        initial tiles.
+        """
+        # replace with your code
+        self._grid = [[0] * self._width 
+                     for row in range(self._height)]
+        self.new_tile()
+        self.new_tile()
+        print self._grid        
+        
+    def __str__(self):
+        """
+        Return a string representation of the grid for debugging.
+        """
+        return str(self._grid)
+
+    def get_grid_height(self):
+        """
+        Get the height of the board.
+        """
+        return self._height
+
+    def get_grid_width(self):
+        """
+        Get the width of the board.
+        """
+        return self._width      
+    
+    def move(self, direction):
+        """
+        Move all tiles in the given direction and add
+        a new tile if any tiles moved.
+        """
+        result = []
+        orginal = tuple(self._grid)
+        
+        
+        # begin with Left
+        if direction == LEFT :
+            for num in range(self._height):
+                line_num = self._grid[num]
+                result_num = merge(line_num)
+                result.append(result_num)
+            self._grid = result
+        
+        # then with Right
+        if direction == RIGHT:
+            #inverse the grid
+            for num in range(self._height):
+                line_num = self._grid[num]
+                line_num_inv = line_num[::-1]
+                result_num_inv = merge(line_num_inv)
+                # inverse back
+                result_num = result_num_inv[::-1]
+                result.append(result_num)            
+            self._grid = result
+                 
+        # then with Up
+        if direction == UP:
+            transposed_grid = transpose_grid(self._grid)
+            for num in range(self._width):
+                line_num = transposed_grid[num]
+                result_num = merge(line_num)
+                result.append(result_num)
+            self._grid = transpose_grid(result)
+            
+        # then with Down
+        if direction == DOWN:
+            transposed_grid = transpose_grid(self._grid)
+            for num in range(self._width):
+                line_num = transposed_grid[num]
+                line_num_inv = line_num[::-1]
+                result_num_inv = merge(line_num_inv)
+                result_num = result_num_inv[::-1]
+                result.append(result_num)
+            self._grid = transpose_grid(result)        
+            
+        new = tuple(self._grid)
+        if orginal != new:
+            self.new_tile()
+            
+    def new_tile(self):
+        """
+        Create a new tile in a randomly selected empty
+        square.  The tile should be 2 90% of the time and
+        4 10% of the time.
+        """
+        
+        number_choosed = 0    
+        while  number_choosed < 1:   
+            row = random.randrange(0,self._height)
+            col = random.randrange(0,self._width)
+            if self.get_tile(row, col) == 0:
+                value_choose = random.random()
+                if value_choose >= 0.1:
+                    value = 2
+                elif value_choose < 0.1: 
+                    value = 4 
+                self.set_tile(row, col, value)
+                number_choosed += 1  
+                   
+    def set_tile(self, row, col, value):
+        """
+        Set the tile at position row, col to have the given value.
+        """ 
+        row_line = self._grid[row]
+        row_line[col] = value
+
+    def get_tile(self, row, col):
+        """
+        Return the value of the tile at position row, col.
+        """
+        row_line = self._grid[row]
+        value = row_line[col]
+        return  value
+
+
+poc_2048_gui.run_gui(TwentyFortyEight(4, 5))
