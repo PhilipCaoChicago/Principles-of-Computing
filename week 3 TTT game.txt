@@ -1,0 +1,110 @@
+http://www.codeskulptor.org/#user43_westLPTZgF10exK_1.py
+
+"""
+Monte Carlo Tic-Tac-Toe Player
+"""
+
+import random
+import poc_ttt_gui
+import poc_ttt_provided as provided
+
+# Constants for Monte Carlo simulator
+# You may change the values of these constants as desired, but
+#  do not change their names.
+NTRIALS = 10         # Number of trials to run
+SCORE_CURRENT = 1.0 # Score for squares played by the current player
+SCORE_OTHER = 1.0   # Score for squares played by the other player
+    
+# Add your functions here.
+
+def mc_trial(board, player):
+    """
+    Monte Carlo playing method for Tic-Tac-Toe
+    """
+    while board.check_win() == None:
+        board.dim = board.get_dim()
+        row = random.randrange(board.dim)
+        col = random.randrange(board.dim)
+        board.move(row, col, player)
+        provided.switch_player(player)
+                
+def mc_update_scores(scores, board, player):
+    """
+    Monte Carlo Evaluation method for Tic-Tac-Toe
+    """
+    board.dim = board.get_dim()      
+    # case playerx win
+    if board.check_win() == provided.PLAYERX:        
+        for row in range(board.dim):
+            for col in range(board.dim):                
+                if board.square(row, col) == provided.PLAYERX:
+                    scores[row][col] += SCORE_CURRENT
+                elif board.square(row, col) == provided.PLAYERO:
+                    scores[row][col] -= SCORE_OTHER
+                    
+        # case playero win
+    elif board.check_win() == provided.PLAYERO:
+        for row in range(board.dim):              
+            for col in range(board.dim):
+                if board.square(row, col) == provided.PLAYERX:
+                    scores[row][col] -= SCORE_OTHER 
+                elif board.square(row, col) == provided.PLAYERO:
+                    scores[row][col] += SCORE_CURRENT      
+                                        
+def get_best_move(board, scores):
+    """
+    Monte Carlo Choosing the best move for Tic-Tac-Toe
+    """
+    empty_squares = board.get_empty_squares()
+    empty_scores = []
+    
+    # get all scores of the empty_squares
+    for square in range(len(empty_squares)):
+        empty_scores.append(scores[empty_squares[square][0]][empty_squares[square][1]]) 
+             
+    # find the maxium squares
+    max_score = max(empty_scores)    
+    max_squares = []
+    for square in range(len(empty_squares)):
+        if empty_scores[square] >= max_score:
+            max_squares.append(empty_squares[square])
+        
+    # randomly choose one square within maxium
+    move = tuple(random.choice(max_squares))
+    return move
+
+def mc_move(board, player, trials):
+    """
+    Monte Carlo Performaning the best move for Tic-Tac-Toe
+    """    
+    
+    # initialize the scores
+    dim = board.get_dim() 
+    scores = []
+    for dummy_row in range(dim): 
+        scores_dummy_row = []
+        for dummy_col in range(dim):                
+            scores_dummy_row.append(0)
+        scores.append(scores_dummy_row)
+
+                
+    # Monte Carlo Simulation for "trials" times of trial            
+    num = 0
+    while num < trials:
+        board_copy = board.clone()
+        mc_trial(board_copy, player)
+        mc_update_scores(scores, board_copy, player)
+        num += 1
+    
+    # get the best move according to the scores of the simulation
+    return get_best_move(board, scores)
+        
+    
+
+
+# Test game with the console or the GUI.  Uncomment whichever 
+# you prefer.  Both should be commented out when you submit 
+# for testing to save time.
+
+# provided.play_game(mc_move, NTRIALS, False)        
+poc_ttt_gui.run_gui(3, provided.PLAYERX, mc_move, NTRIALS, False)
