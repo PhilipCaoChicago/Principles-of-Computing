@@ -1,0 +1,46 @@
+
+Functions to enumerate sequences of outcomes
+Repetition of outcomes is allowed
+
+
+
+def gen_all_sequences(outcomes, length)
+    
+    Iterative function that enumerates the set of all sequences of
+    outcomes of given length
+    
+    
+    ans = set([()])
+    for dummy_idx in range(length)
+        temp = set()
+        for seq in ans
+            for item in outcomes
+                new_seq = list(seq)
+                new_seq.append(item)
+                temp.add(tuple(new_seq))
+        ans = temp
+    return ans
+
+
+"""
+Function to generate permutations of outcomes
+Repetition of outcomes not allowed
+"""
+
+def gen_permutations(outcomes, length):
+    """
+    Iterative function that generates set of permutations of
+    outcomes of length num_trials
+    No repeated outcomes allowed
+    """
+    
+    ans = set([()])
+    for dummy_idx in range(length):
+        temp = set()
+        for seq in ans:
+            for item in set(outcomes).difference(seq):
+                new_seq = list(seq)
+                new_seq.append(item)
+                temp.add(tuple(new_seq))
+        ans = temp
+    return ans
