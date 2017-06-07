@@ -1,0 +1,112 @@
+http://www.codeskulptor.org/#user43_3FS0FVltPO9QO7k.py
+
+
+"""
+Simulator for greedy boss scenario
+"""
+
+import simpleplot
+import math
+import codeskulptor
+codeskulptor.set_timeout(20)
+
+STANDARD = True
+LOGLOG = False
+
+# constants for simulation
+INITIAL_SALARY = 100
+SALARY_INCREMENT = 100
+INITIAL_BRIBE_COST = 1000
+
+
+def slope(pos1,pos2):
+    a = pos2[0] - pos1[0] 
+    b = pos2[1] - pos1[1]
+    return b/a
+
+def greedy_boss(days_in_simulation, bribe_cost_increment, plot_type = STANDARD):
+    """
+    Simulation of greedy boss
+    """
+    
+    # initialize necessary local variables
+    current_day = 0
+    current_savings = 0
+    total_salary_earned = 0
+    current_bribe_cost = INITIAL_BRIBE_COST
+    current_salary = INITIAL_SALARY
+    
+    # define  list consisting of days vs. total salary earned for analysis
+    days_vs_earnings = []
+
+    # Each iteration of this while loop simulates one bribe
+    while current_day <= days_in_simulation:
+        
+        # update list with days vs total salary earned
+        # use plot_type to control whether regular or log/log plot
+        if plot_type == STANDARD:
+            days_vs_earnings.append((current_day, total_salary_earned))
+        elif plot_type == LOGLOG:
+            days_vs_earnings.append([math.log(current_day), math.log(total_salary_earned)])
+        
+        # check whether we have enough money to bribe without waiting
+        if current_savings >= current_bribe_cost:
+            days_to_next_bribe = 0
+        else:
+            time_to_next_bribe = (current_bribe_cost - current_savings) / float(current_salary)
+            days_to_next_bribe = int(math.ceil(time_to_next_bribe))
+        
+        # advance current_day to day of next bribe (DO NOT INCREMENT BY ONE DAY)
+        current_day += days_to_next_bribe
+
+        # update state of simulation to reflect bribe
+        current_savings += days_to_next_bribe * current_salary
+        current_savings -= current_bribe_cost
+        total_salary_earned += days_to_next_bribe * current_salary
+        current_bribe_cost += bribe_cost_increment
+        current_salary += SALARY_INCREMENT
+   
+    return days_vs_earnings
+
+def func(days_in_simulation, func_num = 1, plot_type = STANDARD):
+    current_day = 0
+    current_output = 0
+    days_vs_earnings = []
+    
+    while current_day <= days_in_simulation:
+        if plot_type == STANDARD:
+            days_vs_earnings.append((current_day, current_output))
+        elif plot_type == LOGLOG:
+            days_vs_earnings.append([math.log(current_day), math.log(current_output)])
+            
+        current_day = current_day + 1
+        if func_num == 1:
+            current_output = 9.5 * current_day ** 4
+        elif func_num == 2:
+            current_output = math.pow(math.e, (0.095 * current_day))
+        elif func_num == 3:
+            current_output = 95 * math.pow(current_day, 2)
+        elif func_num == 4:
+            current_output = math.pow(math.e, (9.5 * current_day))
+    
+    return days_vs_earnings
+
+
+def run_simulations():
+    """
+    Run simulations for several possible bribe increments
+    """
+    plot_type = STANDARD
+    days = 70
+    inc_0 = greedy_boss(days, 0, plot_type)
+    func1 = func(days, 1, plot_type)
+    func2 = func(days, 2, plot_type)
+    func3 = func(days, 3, plot_type)
+    func4 = func(days, 4, plot_type)
+    ##inc_500 = greedy_boss(days, 500, plot_type)
+    #inc_1000 = greedy_boss(days, 1000, plot_type)
+    #inc_2000 = greedy_boss(days, 2000, plot_type)
+    simpleplot.plot_lines("Greedy boss", 600, 600, "days", "total earnings", 
+                          [inc_0, func2, func3], False,
+                         ["Bribe increment = 0","func2","func3"] )
+    
