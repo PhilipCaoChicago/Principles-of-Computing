@@ -1,0 +1,339 @@
+
+http://www.codeskulptor.org/#user43_PNwkCYu3tOPZWVz_189.py
+
+##################################################################
+    # Phase one methods
+    
+    # helper function for updating position and update
+    def move(self, str1, direction):
+        """
+        move the string in the direction
+        """
+        self.update_puzzle(direction)
+        str1 += direction
+        return str1
+
+    def lower_row_invariant(self, target_row, target_col):
+        """
+        Check whether the puzzle satisfies the specified invariant
+        at the given position in the bottom rows of the puzzle (target_row > 1)
+        Returns a boolean
+        """
+        if self.get_number(target_row, target_col) != 0:
+            return False
+        if target_row + 1  < self._height:
+            for row in range(target_row + 1, self._height):
+                for col in range(self._width):
+                    if self.get_number(row, col) != row * self._width + col:
+                        return False
+        if target_col + 1 < self._width:
+            for col in range(target_col + 1, self._height):
+                if self.get_number(target_row, col) != target_row * self._width + col:
+                    return False
+        return True
+
+    def solve_interior_tile(self, target_row, target_col):
+        """
+        Place correct tile at target position
+        Updates puzzle and returns a move string
+        """
+        pos = self.current_position(target_row, target_col)
+        str1 = ""
+        # case 00 if the target tile not above 
+        # or the same row of the target position
+        if pos[0] != target_row and pos[1] != target_col:
+            # move zero tile into the same row of target tile
+            count1 = target_row - pos[0]
+            str1 = self.move(str1, "u" * count1)
+            # move the target tile just above the target position
+            # if the target tile is left to the col of the target position 
+            if pos[1] < target_col:
+                count2 = target_col - pos[1]
+                count3 = target_col - pos[1]
+                while count2 > 1:
+                    str1 = self.move(str1, "l")
+                    count2 -= 1
+                while 0 < count2 <= 1:
+                    str1 = self.move(str1, "lrdlurdlur")
+                    count2 -= 1
+                    count3 -= 1
+                str1 = self.move(str1, "rdlur" * count3)
+            # if the target tile is right to the col of the target position                    
+            elif pos[1] > target_col:
+                count2 = pos[1] - target_col
+                count3 = pos[1] - target_col
+                while count2 > 1:
+                    str1 = self.move(str1, "r")
+                    count2 -= 1
+                str1 = self.move(str1, "rldruldrul")
+                str1 = self.move(str1, "rdlur" * count3)
+            # move the target tile just to the target position
+            count4 =  target_row - self.current_position(target_row, target_col)[0]  
+            while count4 > 1:
+                str1 = self.move(str1, "lddru")
+                count4 -= 1
+            str1 = self.move(str1, "lddruld")
+            return str1             
+                
+        # case 1 the target tile is just the same row of target position
+        if pos[0] == target_row:
+            count1 = target_col - pos[1]
+            count2 = target_col - pos[1]
+            str1 = self.move(str1, "u")
+            str1 = self.move(str1, "l" * count1)               
+            str1 = self.move(str1, "rdlur" * count2)
+            str1 = self.move(str1, "ld")
+            return str1
+            
+            
+        # case 2 the target tile is just above the target position 
+        if pos[1] == target_col:
+            count1 = target_row - pos[0]
+            count2 = target_row - pos[0]
+            str1 = self.move(str1, "u" * count1)
+            while count2 > 1:
+                str1 = self.move(str1, "lddru")
+                count2 -= 1
+            str1 = self.move(str1, "ld")
+            return str1                   
+
+    def solve_col0_tile(self, target_row):
+        """
+        Solve tile in column zero on specified row (> 1)
+        Updates puzzle and returns a move string
+        """
+        pos = self.current_position(target_row, 0)
+        str1 = ""
+        # case 0 if target tile is just above the tile
+        if pos[0] == target_row - 1 and pos[1] == 0:
+            str1 = self.move(str1, "u")
+            count1 = self._width - 1
+            while count1 > 0:
+                str1 = self.move(str1, "r")
+                count1 -= 1
+            return str1
+        # case 1 if target tile is not just above, 
+        # and only 1 tile away, of the tile
+        
+        # move the target tile to position (i-1, 1) and the 
+        # zero tile to position (i-1, 0)
+        # case 10 if target tile is just above the tile
+        elif pos[0] != target_row - 1 and pos[1] == 0:
+            count1 = target_row - pos[0]
+            count2 = target_row - pos[0] - 2 
+            # move to the position up of the target tile
+            while count1 > 0:
+                str1 = self.move(str1, "u")
+                count1 -= 1
+            # move the target tile to the left
+            str1 = self.move(str1, "rdlur")
+            # move the target tile just in (i-1, 1), i.e. move down target tile
+            while count2 > 0:
+                str1 = self.move(str1, "lddruld")
+                count2 -= 1 
+            # move the zero tile to (i-1, 0)
+            str1 = self.move(str1, "ld")
+        # case 11 if the target tile is on the left of the col of target pos
+        elif pos[1] != 0:
+            count1 = target_row - pos[0]
+            count2 = target_row - pos[0] - 1
+            count3 = pos[1] - 1
+            count4 = pos[1] - 1
+            # move zero tile to the row of the target tile
+            while count1 > 0:
+                str1 = self.move(str1, "u")
+                count1 -= 1
+            # move zero tile to the left of the target tile
+            while count3 > 0:
+                str1 = self.move(str1, "r")
+                count3 -= 1
+            # move target tile down to the i-1 row
+            while count2 > 0:
+                str1 = self.move(str1, "rdlurdlud")
+                count2 -= 1
+            # move the zero tile up of the target tile
+            str1 = self.move(str1, "ur")
+            # move the target tile to (i-1,1)
+            while count4 > 0:
+                str1 = self.move(str1, "ldrul")
+                count4 -= 1
+            # move the zero tile to (i-1, 0)
+            str1 = self.move(str1, "ld")
+        # now move target tile to (i, 0)
+        str1 = self.move(str1, "ruldrdlurdluurddlur")
+        # move zero tile to (i-1, n)
+        str1 = self.move(str1, "r" * (self._width - 2))
+        return str1
+            
+        
+
+    #############################################################
+    # Phase two methods
+
+    def row0_invariant(self, target_col):
+        """
+        Check whether the puzzle satisfies the row zero invariant
+        at the given column (col > 1)
+        Returns a boolean
+        """
+        row0 = 0
+        if self.get_number(row0, target_col) != 0:
+            return False
+        for col in range(target_col + 1,self._width):
+            if self.get_number(row0, col) != col:
+                return False
+        row1 = 1
+        for col in range(target_col,self._width):
+            if self.get_number(row1, col) != row1 * self._width + col:
+                return False
+        # check last n-2 row
+        for row in range(2, self._height):
+            for col in range(self._width):
+                if self.get_number(row, col) != row * self._width + col:
+                    return False
+               
+        return True
+
+    def row1_invariant(self, target_col):
+        """
+        Check whether the puzzle satisfies the row one invariant
+        at the given column (col > 1)
+        Returns a boolean
+        """
+        row1 = 1
+        if self.get_number(row1, target_col) != 0:
+            return False
+        elif self.lower_row_invariant(row1, target_col) == False:
+            return False
+        row0 = 0
+        if target_col + 1 < self._width:
+            for col in range(target_col + 1,self._width):
+                if self.get_number(row0, col) != col:
+                    return False
+        return True
+
+    def solve_row0_tile(self, target_col):
+        """
+        Solve the tile in row zero at the specified column
+        Updates puzzle and returns a move string
+        """
+        str1 = ""
+        if self.get_number(0, target_col) == target_col:
+            str1 = self.move(str1, "u")
+            return str1
+        elif self.get_number(1, target_col - 1) == target_col:
+            # move zero above target
+            str1 = self.move(str1, "l")
+            # move target to (1, j-1)
+            str1 = self.move(str1, "ldru")
+            # move zero to (1, j-2)
+            str1 = self.move(str1, "lld")
+        else:
+            # move zero to the left of the target tile
+            pos = self.current_position(0, target_col)
+            count1 = target_col - pos[1] - 1
+            count2 = pos[0]
+            str1 = self.move(str1, "l" * count1 + "d" * count2)
+            # move the target tile down if necessary and zero in the up of the tile
+            if pos[0] == 0:
+                str1 = self.move(str1, "ldruldrul")
+            if pos[0] == 1:
+                str1 = self.move(str1, "ul")
+            # move the target tile to (1, j-1)
+            count3 = target_col - 1 - pos[1]
+            str1 = self.move(str1, "rdlur" * count3)
+            # move the zero tile to (1, j-2)
+            str1 = self.move(str1, "ld")
+        # now using the method of # 10 of hw to complete the method
+        str1 = self.move(str1, "urdlurrdluldrruld")
+        return str1
+
+    def solve_row1_tile(self, target_col):
+        """
+        Solve the tile in row one at the specified column
+        Updates puzzle and returns a move string
+        """
+        str1 = ""
+        print "in"
+        if self.get_number(0, target_col) == self._width + target_col:
+            str1 = self.move(str1, "u")
+            return str1
+        else: 
+            # move zero to the left of the target tile
+            pos = self.current_position(1, target_col)
+            count1 = target_col - pos[1] - 1
+            count2 = 1 - pos[0]
+            str1 = self.move(str1, "l" * count1 + "u" * count2)
+            # move the target tile down if necessary and zero in the up of the tile
+            if pos[0] == 0:
+                str1 = self.move(str1, "ldruldrul")
+            if pos[0] == 1:
+                str1 = self.move(str1, "ul")
+            # move the target tile to (1, j)
+            count3 = target_col - pos[1]
+            str1 = self.move(str1, "rdlur" * count3)
+        return str1
+        
+
+
+    ###########################################################
+    # Phase 3 methods
+
+    def solve_2x2(self):
+        """
+        Solve the upper left 2x2 part of the puzzle
+        Updates the puzzle and returns a move string
+        """
+        # put the zero into original position
+        str1 = ""
+        pos = self.current_position(0,0)
+        str1 = self.move(str1, "l" * (pos[0]) + "u" * (pos[1]))
+        # check the situtation
+        if self.get_number(0,1) == 1:
+            return str1
+        elif self.get_number(1,0) == 1:
+            str1 = self.move(str1, "rdlurdlu")
+            return str1
+        elif self.get_number(1,1) == 1:
+            str1 = self.move(str1, "rdlu")
+            return str1
+        
+    def solve_puzzle(self):
+        """
+        Generate a solution string for a puzzle
+        Updates the puzzle and returns a move string
+        """
+        str1 = ""
+        # move zero to j,j
+        pos = self.current_position(0,0)
+        str1 = self.move(str1, "r" * (self._width - 1 - pos[1]) + "d" * (self._height - 1 -pos[0]))
+        # solve for n-2 rows of the puzzle
+        for row in range(self._height - 1, 2 - 1, -1):
+            for col in range(self._width - 1, 0 - 1, -1):
+                print row, col
+                assert self.lower_row_invariant(row, col), "wrong at, row: " + str(row) + ", col: "+ str(col)
+                if col != 0:
+                    str1 += self.solve_interior_tile(row, col)
+                elif col == 0:
+                    str1 += self.solve_col0_tile(row)
+        
+        # solve for n-2 column for the puzzle
+        for col in range(self._width - 1, -1, -1):
+            for row in range(1,-1,-1):  
+                print col,row
+                if row == 1: 
+                    print str1
+                    assert self.row1_invariant(col),"wrong at, row: " + str(row) + ", col: "+ str(col)
+                    str1 += self.solve_row1_tile(col)
+                elif row == 0:
+                    if col != 0:
+                        print str1
+                        assert self.row0_invariant(col),"wrong at, row: " + str(row) + ", col: "+ str(col)
+                        str1 += self.solve_row0_tile(col)
+        # solve for 2*2 puzzle
+        print "phase3"
+        str1 += self.solve_2x2()
+        return str1
+
+obj = Puzzle(4, 5, [[15, 16, 0, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [1, 2, 17, 18, 19]])
+poc_fifteen_gui.FifteenGUI(obj) 
